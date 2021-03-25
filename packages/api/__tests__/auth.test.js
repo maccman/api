@@ -54,6 +54,24 @@ describe('#auth()', () => {
 
         return expect(sdk.auth(apiKey, apiKey).getSomething()).rejects.toThrow(/only a single key is needed/i);
       });
+
+      it('should allow multiple auth keys for different calls', async () => {
+        const sdk = api(securityOas);
+        const apiKey1 = '12345';
+        const apiKey2 = '67890';
+        const mock1 = nock(serverUrl).get('/').query({ apiKeyParam: apiKey1 }).reply(200, {});
+        const mock2 = nock(serverUrl).get('/').query({ apiKeyParam: apiKey2 }).reply(200, {});
+
+        await sdk
+          .auth(apiKey1)
+          .getSomething()
+          .then(() => mock1.done());
+
+        await sdk
+          .auth(apiKey2)
+          .getSomething()
+          .then(() => mock2.done());
+      });
     });
 
     describe('in: header', () => {
